@@ -49,7 +49,7 @@ I suggest installing these as a regular user. To do so, you can copy both files 
 
 ```bash
 $ systemctl --user daemon-reload
-$ systemctl --user enable finance_harvester.timer
+$ systemctl --user enable --now finance_harvester.timer
 ```
 
 Finally, you can test the service manually using:
