@@ -1,0 +1,12 @@
+[Unit]
+Description=Finance Data Harvester timer
+
+[Timer]
+OnCalendar=11:00 UTC
+OnCalendar=14:30 UTC
+OnCalendar=18:30 UTC
+AccuracySec=30s
+Persistent=true
+
+[Install]
+WantedBy=timers.target

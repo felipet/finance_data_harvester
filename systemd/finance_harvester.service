@@ -1,0 +1,9 @@
+[Unit]
+Description=Service that harvests financial data
+After=network.target
+Documentation=https://github.com/felipet/finance_data_harvester
+
+[Service]
+ExecStart=finance_harvester --service -d --refresh-short all
+Type=oneshot
+EnvironmentFile=/etc/finance-harvester/config
