@@ -21,15 +21,6 @@ pub fn configure_tracing(enable_journald: bool, verbose_level: u8) {
         _ => LevelFilter::TRACE,
     };
 
-    // Configure the default layer: STDOUT
-    let layer = fmt::layer()
-        .with_ansi(false)
-        .with_target(false)
-        .with_filter(tracing_level)
-        .boxed();
-
-    layers.push(layer);
-
     if enable_journald {
         match tracing_journald::layer() {
             Ok(layer) => {
@@ -46,6 +37,15 @@ pub fn configure_tracing(enable_journald: bool, verbose_level: u8) {
                 error!("couldn't connect to journald: {e}");
             }
         }
+    } else {
+        // Configure the default layer: STDOUT when not running as a systemd service
+        let layer = fmt::layer()
+            .with_ansi(false)
+            .with_target(false)
+            .with_filter(tracing_level)
+            .boxed();
+
+        layers.push(layer);
     }
 
     tracing_subscriber::registry().with(layers).init();
