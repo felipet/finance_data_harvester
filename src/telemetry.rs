@@ -36,6 +36,7 @@ pub fn configure_tracing(enable_journald: bool, verbose_level: u8) {
                 layers.push(
                     layer
                         .with_field_prefix(Some("finance_harvester".to_owned()))
+                        .with_filter(tracing_level)
                         .boxed(),
                 );
             }
