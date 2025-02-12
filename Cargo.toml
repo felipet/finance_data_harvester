@@ -1,0 +1,14 @@
+[package]
+name = "finance_data_harvester"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+clap = { version = "4.5.28", features = ["derive"] }
+data_harvest = "0.1.0"
+secrecy = "0.10.3"
+sqlx = { version = "0.8", features = [ "runtime-tokio", "postgres", "macros", "uuid", "chrono" ] }
+tokio = { version = "1.20.0", features = ["rt-multi-thread", "macros"]}
+tracing = "0.1.41"
+tracing-journald = "0.3.1"
+tracing-subscriber = "0.3.19"
