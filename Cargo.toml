@@ -11,4 +11,4 @@ sqlx = { version = "0.8", features = [ "runtime-tokio", "postgres", "macros", "u
 tokio = { version = "1.20.0", features = ["rt-multi-thread", "macros"]}
 tracing = "0.1.41"
 tracing-journald = "0.3.1"
-tracing-subscriber = "0.3.19"
+tracing-subscriber = { version = "0.3.19", features = ["registry"]}

@@ -4,8 +4,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-use tracing::{error, level_filters::LevelFilter};
-use tracing_subscriber::{fmt, prelude::*, Layer};
+use tracing::{error, level_filters::LevelFilter, Level};
+use tracing_subscriber::{filter::Targets, fmt, prelude::*, Layer};
 
 pub fn configure_tracing(enable_journald: bool, verbose_level: u8) {
     // Store all the tracing layers in an array to allow a dynamic configuration
@@ -13,12 +13,12 @@ pub fn configure_tracing(enable_journald: bool, verbose_level: u8) {
     let mut layers = Vec::new();
 
     // Map the verbosity level to a LevelFilter
-    let tracing_level = match verbose_level {
-        0 => LevelFilter::ERROR,
-        1 => LevelFilter::INFO,
-        2 => LevelFilter::WARN,
-        3 => LevelFilter::DEBUG,
-        _ => LevelFilter::TRACE,
+    let (tracing_level, tracing_levelfilter) = match verbose_level {
+        0 => (Level::ERROR, LevelFilter::ERROR),
+        1 => (Level::INFO, LevelFilter::INFO),
+        2 => (Level::WARN, LevelFilter::WARN),
+        3 => (Level::DEBUG, LevelFilter::DEBUG),
+        _ => (Level::TRACE, LevelFilter::TRACE),
     };
 
     if enable_journald {
@@ -27,7 +27,7 @@ pub fn configure_tracing(enable_journald: bool, verbose_level: u8) {
                 layers.push(
                     layer
                         .with_field_prefix(Some("finance_harvester".to_owned()))
-                        .with_filter(tracing_level)
+                        .with_filter(tracing_levelfilter)
                         .boxed(),
                 );
             }
@@ -42,11 +42,19 @@ pub fn configure_tracing(enable_journald: bool, verbose_level: u8) {
         let layer = fmt::layer()
             .with_ansi(false)
             .with_target(false)
-            .with_filter(tracing_level)
+            .with_filter(tracing_levelfilter)
             .boxed();
 
         layers.push(layer);
     }
 
-    tracing_subscriber::registry().with(layers).init();
+    // Enable a target to avoid receiving logs from hyper and the scrapper crates (too verbose).
+    let target = Targets::new()
+        .with_target("finance_data_harvester", tracing_level)
+        .with_target("data_harvest", tracing_level);
+
+    tracing_subscriber::registry()
+        .with(layers)
+        .with(target)
+        .init();
 }
