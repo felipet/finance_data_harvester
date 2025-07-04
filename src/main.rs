@@ -9,8 +9,7 @@ use data_harvest::{feeders::IbexShortFeeder, web_scrappers::CnmvProvider};
 use finance_data_harvester::telemetry;
 use secrecy::{ExposeSecret, SecretString};
 use sqlx::postgres::PgPool;
-use std::env;
-use std::sync::Arc;
+use std::{env, sync::Arc};
 use tracing::{error, info, warn};
 
 #[derive(Parser)]
@@ -86,9 +85,17 @@ async fn main() {
                     "Selected to refresh short positions for the tickers: {:?}",
                     ticker
                 );
-                let _ = feeder.add_today_data().await.map_err(|e| {
-                    error!("{e}");
-                });
+                let updated_tickers = feeder.add_today_data().await;
+
+                match updated_tickers {
+                    Ok(tickers) => {
+                        info!("The following tickers got updated: [{}]", tickers.join(","));
+                    }
+                    Err(e) => {
+                        error!("{e}");
+                    }
+                }
+
                 info!("Short positions updated");
             }
         }
