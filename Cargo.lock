@@ -374,9 +374,9 @@ dependencies = [
 
 [[package]]
 name = "data_harvest"
-version = "0.2.1"
+version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "920d9404ae46711d0201f00a8b7319c0f6eb5f1d2a96c58cf0c3f7514f7ce1c1"
+checksum = "7e946be8b47df1c29bc69800a86b12904246cf859fa3a95b32c459dc56a15ef2"
 dependencies = [
  "chrono",
  "finance_api",
