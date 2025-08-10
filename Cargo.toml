@@ -1,14 +1,17 @@
 [package]
 name = "finance_data_harvester"
-version = "0.1.3"
+version = "0.2.0"
 edition = "2021"
 
 [dependencies]
 clap = { version = "4.5.28", features = ["derive"] }
 data_harvest = "0.3.0"
 secrecy = "0.10.3"
-sqlx = { version = "0.8", features = [ "runtime-tokio", "postgres", "macros", "uuid", "chrono" ] }
+sqlx = { version = "0.8.6", features = [ "runtime-tokio", "postgres", "macros", "uuid", "chrono" ] }
 tokio = { version = "1.20.0", features = ["rt-multi-thread", "macros"]}
 tracing = "0.1.41"
 tracing-journald = "0.3.1"
 tracing-subscriber = { version = "0.3.19", features = ["registry"]}
+reqwest = { version = "0.12", features = ["json"] }
+serde_json = "1.0.142"
+chrono = "0.4.41"
