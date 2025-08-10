@@ -4,9 +4,11 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+use chrono::Utc;
 use clap::{CommandFactory, Parser};
 use data_harvest::{feeders::IbexShortFeeder, web_scrappers::CnmvProvider};
 use finance_data_harvester::telemetry;
+use reqwest::header;
 use secrecy::{ExposeSecret, SecretString};
 use sqlx::postgres::PgPool;
 use std::{env, sync::Arc};
@@ -61,6 +63,22 @@ async fn main() {
         }
     };
 
+    let webhook_url = match env::var("WEBHOOK_URL") {
+        Ok(val) => val,
+        Err(_) => {
+            error!("Missing environment variable WEBHOOK_URL");
+            return;
+        }
+    };
+
+    let webhook_token = match env::var("WEBHOOK_TOKEN") {
+        Ok(token) => SecretString::from(token),
+        Err(_) => {
+            error!("Missing environment variable WEBHOOK_TOKEN");
+            return;
+        }
+    };
+
     let db_pool = match PgPool::connect(database_url.expose_secret()).await {
         Ok(p) => p,
         Err(e) => {
@@ -90,6 +108,46 @@ async fn main() {
                 match updated_tickers {
                     Ok(tickers) => {
                         info!("The following tickers got updated: [{}]", tickers.join(","));
+
+                        // Sending a request to Shortbot to update users subscribed to the former tickers.
+                        info!("Triggering webhook from Shortbot");
+
+                        let client = reqwest::Client::new();
+
+                        let mut headers = header::HeaderMap::new();
+                        headers.insert(
+                            header::AUTHORIZATION,
+                            format!("basic {}", webhook_token.expose_secret())
+                                .parse()
+                                .unwrap(),
+                        );
+
+                        let response = client
+                            .post(webhook_url)
+                           .headers(headers)
+                            .json(&serde_json::json!({
+                                "req_type": "ShortUpdate",
+                                "req_payload": format!("{{\"timestamp\": \"{}\", \"payload\": \"{}\"}}", Utc::now(), tickers.join(";"))
+                            }))
+                            .send()
+                            .await;
+
+                        match response {
+                            Ok(r) => {
+                                if r.status() == 200 {
+                                    info!("Webhook request successfully received");
+                                } else {
+                                    warn!(
+                                        "The webhook had some issue: {} - {}",
+                                        r.status(),
+                                        r.text().await.unwrap()
+                                    );
+                                }
+                            }
+                            Err(e) => {
+                                error!("Error received from the webhook handler: {e}");
+                            }
+                        }
                     }
                     Err(e) => {
                         error!("{e}");
